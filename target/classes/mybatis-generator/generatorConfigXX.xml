@@ -1,0 +1,176 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE generatorConfiguration PUBLIC "-//mybatis.org//DTD MyBatis Generator Configuration 1.0//EN"
+        "http://mybatis.org/dtd/mybatis-generator-config_1_0.dtd">
+<!-- 配置生成器 -->
+<!--此文件注释详细，作为参考，另一篇，简略清爽-->
+<generatorConfiguration>
+    <!--
+    可以用于加载配置项或者配置文件，在整个配置文件中就可以使用${propertyKey}的方式来引用配置项
+    resource：配置资源加载地址，使用resource，MBG从classpath开始找，比如com/myproject/generatorConfig.properties
+    url：配置资源加载地质，使用URL的方式，比如file:///C:/myfolder/generatorConfig.properties.
+    注意，两个属性只能选址一个;
+
+    另外，如果使用了mybatis-generator-maven-plugin，那么在pom.xml中定义的properties都可以直接在generatorConfig.xml中使用
+    -->
+    <!-- 引入配置文件 -->
+    <properties resource="mybatis-generator/mybatisGeneratorInit.properties"/>
+
+
+    <!--比较复杂，需要手动设置成你自己本地mysql驱动包的绝对路径，所以还是不设置了，反正没有任何影响-->
+    <!--classPathEntry:数据库的JDBC驱动位置 可选 -->
+    <!--<classPathEntry location="${jdbc.driverLocation}" />-->
+
+
+    <!-- 一个数据库一个context -->
+    <!--defaultModelType="flat" 大数据字段，不分表 -->
+    <!--
+    context:生成一组对象的环境
+    id:必选，上下文id，用于在生成错误时提示
+    defaultModelType:指定生成对象的样式
+        1，conditional：类似hierarchical；如果分离的类仅有一个属性那么就不分离了，比如某张表只有一个主键，那么就不会专门生成一个主键类，只会生成一个类
+        2，flat：所有内容（主键，blob）等全部生成在一个对象中；一张表只会生成唯一的一个类，其中包含了所有的字段
+        3，hierarchical：如果表有主键的话，那么首先会生成一个主键类，另外还会生成一个所有BLOB属性的类，最后还有一个类包含了余下的字段，并且这三个类会有一个合理的层次。
+        主键生成一个XXKey对象(key class)，Blob等单独生成一个对象，其他简单属性在一个对象中(record class)
+    targetRuntime:
+        1，MyBatis3：默认的值，生成基于MyBatis3.x以上版本的内容，包括XXXBySample；
+        2，MyBatis3Simple：类似MyBatis3，只是不生成XXXBySample；
+    introspectedColumnImpl：类全限定名，用于扩展MBG
+    -->
+    <context id="MysqlTables" targetRuntime="MyBatis3" defaultModelType="flat">
+        <!-- 自动识别数据库关键字，默认false，如果设置为true，根据SqlReservedWords中定义的关键字列表；
+         一般保留默认值，遇到数据库关键字（Java关键字），使用columnOverride覆盖 -->
+        <property name="autoDelimitKeywords" value="false"/>
+        <!-- 生成的Java文件的编码 -->
+        <property name="javaFileEncoding" value="UTF-8"/>
+        <!-- 格式化java代码 -->
+        <property name="javaFormatter" value="org.mybatis.generator.api.dom.DefaultJavaFormatter"/>
+        <!-- 格式化XML代码 -->
+        <property name="xmlFormatter" value="org.mybatis.generator.api.dom.DefaultXmlFormatter"/>
+
+        <!-- beginningDelimiter和endingDelimiter：指明数据库的用于标记数据库对象名的符号，
+        比如ORACLE就是双引号，MYSQL默认是`反引号； -->
+        <property name="beginningDelimiter" value="`"/>
+        <property name="endingDelimiter" value="`"/>
+
+
+        <!--<plugin type="org.mybatis.generator.plugins.SerializablePlugin" />-->
+        <!--<plugin type="org.mybatis.generator.plugins.ToStringPlugin" />-->
+        <!--自定义toString插件-->
+        <plugin type="${my.toStringPlugin.address}"/>
+
+        <!-- 自定义注释 -->
+        <commentGenerator type="${my.commentGenerator.address}">
+            <!-- 是否去除自动生成的注释 true：是 ： false:否 -->
+            <property name="suppressAllComments" value="false"/>
+            <!-- 是否生成注释代时间戳-->
+            <property name="suppressDate" value="true"/>
+            <property name="addRemarkComments" value="true"/>
+        </commentGenerator>
+
+        <!--数据库连接的信息：驱动类、连接地址、用户名、密码 -->
+        <jdbcConnection driverClass="${jdbc_driver}"
+                        connectionURL="${jdbc_url}"
+                        userId="${jdbc_user}"
+                        password="${jdbc_password}"/>
+
+        <!-- 类型转换 -->
+        <!-- java类型处理器
+        用于处理DB中的类型到Java中的类型，默认使用JavaTypeResolverDefaultImpl；
+        注意一点，默认会先尝试使用Integer，Long，Short等来对应DECIMAL和 NUMERIC数据类型；
+        -->
+        <javaTypeResolver type="org.mybatis.generator.internal.types.JavaTypeResolverDefaultImpl">
+            <!-- 是否使用bigDecimal， false可自动转化以下类型（Long, Integer, Short, etc.） -->
+            <!-- 默认false，把JDBC DECIMAL 和 NUMERIC 类型解析为 Integer，
+            为 true时把JDBC DECIMAL 和NUMERIC 类型解析为java.math.BigDecimal -->
+            <!--
+            true：使用BigDecimal对应DECIMAL和 NUMERIC数据类型
+            false：默认,
+            scale>0;length>18：使用BigDecimal;
+            scale=0;length[10,18]：使用Long；
+            scale=0;length[5,9]：使用Integer；
+            scale=0;length<5：使用Short；
+            -->
+            <property name="forceBigDecimals" value="false"/>
+        </javaTypeResolver>
+
+
+        <!-- 生成实体类 -->
+        <!-- targetPackage:生成实体类的包名 -->
+        <!-- targetProject:生成实体类的位置 -->
+        <javaModelGenerator targetPackage="${model.target.package}" targetProject="${target.project}">
+            <!-- 是否对model添加 构造构造方法，构造方法包含了所有的field；而不是使用setter； -->
+            <property name="constructorBased" value="true"/>
+            <!-- 在targetPackage的基础上，根据数据库的schema再生成一层package，最终生成的类放在这个package下，默认为false -->
+            <!-- 是否允许子包，即targetPackage.schemaName.tableName -->
+            <property name="enableSubPackages" value="false"/>
+            <!-- 设置是否在getter方法中，对String类型字段调用trim()方法 -->
+            <!-- 从数据库返回的值被清理前后的空格 -->
+            <property name="trimStrings" value="true"/>
+
+            <!-- for MyBatis3 / MyBatis3Simple
+            是否创建一个不可变的类，如果为true，
+            那么MBG会创建一个没有setter方法的类，取而代之的是类似constructorBased的类
+            -->
+            <property name="immutable" value="false"/>
+        </javaModelGenerator>
+
+        <!-- 生成mapper映射文件 XML 生成XxxMapper.xml
+        targetPackage:mapper映射文件生成的包名
+        targetProject:mapper映射文件生成的位置
+        -->
+        <sqlMapGenerator targetPackage="${mapper.target.package}" targetProject="${target.project}">
+            <!-- 在targetPackage的基础上，根据数据库的schema再生成一层package，最终生成的类放在这个package下，默认为false -->
+            <property name="enableSubPackages" value="false"/>
+        </sqlMapGenerator>
+
+        <!-- Dao层接口 生成XxxMapper.java文件：
+        对于mybatis来说，即生成Mapper接口，注意，如果没有配置该元素，那么默认不会生成Mapper接口
+        targetPackage/targetProject:同javaModelGenerator
+        type：选择怎么生成mapper接口（在MyBatis3/MyBatis3Simple下）：
+        1，ANNOTATEDMAPPER：会生成使用Mapper接口+Annotation的方式创建（SQL生成在annotation中），不会生成对应的XML；
+        2，MIXEDMAPPER：使用混合配置，会生成Mapper接口，并适当添加合适的Annotation，但是XML会生成在XML中；
+        3，XMLMAPPER：会生成Mapper接口，接口完全依赖XML；
+        注意：如果context是MyBatis3Simple：只支持ANNOTATEDMAPPER和XMLMAPPER
+        -->
+        <javaClientGenerator targetPackage="${dao.target.package}" targetProject="${target.project}" type="XMLMAPPER">
+            <!-- 在targetPackage的基础上，根据数据库的schema再生成一层package，最终生成的类放在这个package下，默认为false -->
+            <property name="enableSubPackages" value="false"/>
+        </javaClientGenerator>
+
+
+        <!--指定数据库要逆向工程生成的表-->
+        <!--可以生成很多表，生成在本工程结构里面-->
+        <!--设置Example为true的话，就会生成Example文件，比较杂乱，不想生成这些内容的话，直接选择false即可
+        tableName:指定了表名
+        domainObjectName:指定了实体类的名称,可以去掉domainObjectName="False_comment"
+        -->
+        <table tableName="es_comment"
+               domainObjectName="False_comment"
+               enableCountByExample="false"
+               enableUpdateByExample="false"
+               enableDeleteByExample="false"
+               enableSelectByExample="false"
+               selectByExampleQueryId="false">
+            <!-- 如果设置为true，生成的model类会直接使用column本身的名字，而不会再使用驼峰命名方法，
+            比如BORN_DATE，生成的属性名字就是BORN_DATE,而不会是bornDate
+            再比如：数据库里的原本列名是：`is_show_name`（都是小写），
+            如果true就会生成：is_show_name（还是数据库实际的字段名字,原始名字）；生成的setter/getter为：getIs_show_name()和setIs_show_name()(只是第一个字母大写)
+            如果false就会生成：isShowName（去掉了下划线，变成了驼峰命名方法）；生成的setter/getter为：getIsShowName() 和setIsShowName() (只是第一个字母大写)
+            注意：如果明确的使用columnOverride元素指定了字段对应的实体的属性名,那么useActualColumnNames会被忽略。
+            -->
+            <property name="useActualColumnNames" value="false"/>
+            <generatedKey column="id" sqlStatement="Mysql" identity="true"/>
+            <!--
+            另外table节点还可以包含子节点：
+
+            columnOverride:重写某个字段的名字，比如数据中用到了某个java的保留字，假设是class，那么就必须重写该字段映射到实体类中的属性名，那么就可以这么写
+            <columnOverride column="class" property="cls"></columnOverride>
+            而对于数据库的保留字，比如某张表的字段名存在order，那么在生成sql的话，该字段order会被数据库认为是保留字order by的order，这时我们的做法通常是在该字段上加““符号，在用MGB生成时我们可以这么写
+            <columnOverride column="order" property="order" delimitedColumnName="true"></columnOverride>
+            -->
+        </table>
+
+
+    </context>
+</generatorConfiguration>
+

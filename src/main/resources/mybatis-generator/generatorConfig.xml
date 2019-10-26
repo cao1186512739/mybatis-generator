@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE generatorConfiguration PUBLIC "-//mybatis.org//DTD MyBatis Generator Configuration 1.0//EN"
+        "http://mybatis.org/dtd/mybatis-generator-config_1_0.dtd">
+<!-- 配置生成器 -->
+<!--此文件简略清爽，另一篇注释详细，作为参考-->
+<generatorConfiguration>
+    <!--读取配置文件，方便统一管理数据库信息以及路径等-->
+    <properties resource="mybatis-generator/mybatisGeneratorInit.properties"/>
+    <context id="MysqlTables" targetRuntime="MyBatis3" defaultModelType="flat">
+        <!-- 自动识别数据库关键字，默认false，如果设置为true，根据SqlReservedWords中定义的关键字列表；
+         一般保留默认值，遇到数据库关键字（Java关键字），使用columnOverride覆盖 -->
+        <property name="autoDelimitKeywords" value="false"/>
+        <!-- 生成的Java文件的编码 -->
+        <property name="javaFileEncoding" value="UTF-8"/>
+        <!-- 格式化java代码 -->
+        <property name="javaFormatter" value="org.mybatis.generator.api.dom.DefaultJavaFormatter"/>
+        <!-- 格式化XML代码 -->
+        <property name="xmlFormatter" value="org.mybatis.generator.api.dom.DefaultXmlFormatter"/>
+
+        <!-- beginningDelimiter和endingDelimiter：指明数据库的用于标记数据库对象名的符号，
+        比如ORACLE就是双引号，MYSQL默认是`反引号； -->
+        <property name="beginningDelimiter" value="`"/>
+        <property name="endingDelimiter" value="`"/>
+
+        <plugin type="${my.toStringPlugin.address}"/>
+
+        <!-- 自定义注释 -->
+        <commentGenerator type="${my.commentGenerator.address}">
+            <!-- 是否去除自动生成的注释 true：是 ： false:否 -->
+            <property name="suppressAllComments" value="false"/>
+            <!-- 是否生成注释代时间戳-->
+            <property name="suppressDate" value="true"/>
+            <property name="addRemarkComments" value="true"/>
+        </commentGenerator>
+
+        <!--数据库连接的信息：驱动类、连接地址、用户名、密码 -->
+        <jdbcConnection driverClass="${jdbc_driver}"
+                        connectionURL="${jdbc_url}"
+                        userId="${jdbc_user}"
+                        password="${jdbc_password}"/>
+
+        <!-- 类型转换 -->
+        <javaTypeResolver type="org.mybatis.generator.internal.types.JavaTypeResolverDefaultImpl">
+            <!-- 是否使用bigDecimal
+            默认false：把JDBC DECIMAL 和 NUMERIC 类型解析为 Integer，
+            为 true时：把JDBC DECIMAL 和NUMERIC 类型解析为java.math.BigDecimal
+            -->
+            <property name="forceBigDecimals" value="false"/>
+        </javaTypeResolver>
+
+
+        <!-- 生成实体类 -->
+        <!-- targetPackage:生成实体类的包名 -->
+        <!-- targetProject:生成实体类的位置 -->
+        <javaModelGenerator targetPackage="${model.target.package}" targetProject="${target.project}">
+            <!-- 是否对model添加 构造构造方法，构造方法包含了所有的field；而不是使用setter； -->
+            <property name="constructorBased" value="true"/>
+            <!-- 在targetPackage的基础上，根据数据库的schema再生成一层package，最终生成的类放在这个package下，默认为false -->
+            <!-- 是否允许子包，即targetPackage.schemaName.tableName -->
+            <property name="enableSubPackages" value="false"/>
+            <!-- 设置是否在getter方法中，对String类型字段调用trim()方法 -->
+            <!-- 从数据库返回的值被清理前后的空格 -->
+            <property name="trimStrings" value="true"/>
+            <property name="immutable" value="false"/>
+        </javaModelGenerator>
+
+        <!-- 生成mapper映射文件 XML 生成XxxMapper.xml
+        targetPackage:mapper映射文件生成的包名
+        targetProject:mapper映射文件生成的位置
+        -->
+        <sqlMapGenerator targetPackage="${mapper.target.package}" targetProject="${target.project}">
+            <!-- 在targetPackage的基础上，根据数据库的schema再生成一层package，最终生成的类放在这个package下，默认为false -->
+            <property name="enableSubPackages" value="false"/>
+        </sqlMapGenerator>
+
+        <!-- Dao层接口 生成XxxMapper.java文件： -->
+        <javaClientGenerator targetPackage="${dao.target.package}" targetProject="${target.project}" type="XMLMAPPER">
+            <!-- 在targetPackage的基础上，根据数据库的schema再生成一层package，最终生成的类放在这个package下，默认为false -->
+            <property name="enableSubPackages" value="false"/>
+        </javaClientGenerator>
+
+
+        <!--指定数据库要逆向工程生成的表-->
+        <!--可以生成很多表，生成在本工程结构里面-->
+        <!--设置Example为true的话，就会生成Example文件，比较杂乱，不想生成这些内容的话，直接选择false即可
+        tableName:指定了表名
+        domainObjectName:指定了实体类的名称,可以去掉domainObjectName="False_comment"
+        -->
+        <!--        <table tableName="employee"-->
+        <!--               enableCountByExample="false"-->
+        <!--               enableUpdateByExample="false"-->
+        <!--               enableDeleteByExample="false"-->
+        <!--               enableSelectByExample="false"-->
+        <!--               selectByExampleQueryId="false">-->
+        <!--            &lt;!&ndash; 如果设置为true，生成的model类会直接使用column本身的名字，而不会再使用驼峰命名方法，-->
+        <!--            比如BORN_DATE，生成的属性名字就是BORN_DATE,而不会是bornDate-->
+        <!--            再比如：数据库里的原本列名是：`is_show_name`（都是小写），-->
+        <!--            如果true就会生成：is_show_name（还是数据库实际的字段名字,原始名字）；生成的setter/getter为：getIs_show_name()和setIs_show_name()(只是第一个字母大写)-->
+        <!--            如果false就会生成：isShowName（去掉了下划线，变成了驼峰命名方法）；生成的setter/getter为：getIsShowName() 和setIsShowName() (只是第一个字母大写)-->
+        <!--            注意：如果明确的使用columnOverride元素指定了字段对应的实体的属性名,那么useActualColumnNames会被忽略。-->
+        <!--            &ndash;&gt;-->
+        <!--            <property name="useActualColumnNames" value="false"/>-->
+        <!--            <generatedKey column="id" sqlStatement="Mysql" identity="true"/>-->
+        <table tableName="employee" domainObjectName="Employee" enableCountByExample="false"
+               enableUpdateByExample="false" enableDeleteByExample="false" enableSelectByExample="false"></table>
+
+
+    </context>
+</generatorConfiguration>
+
